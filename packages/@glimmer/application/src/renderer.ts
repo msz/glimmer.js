@@ -1,19 +1,36 @@
 import {
   ElementBuilder,
   RenderResult,
-  Environment,
-  TemplateIterator
+  TemplateIterator,
+  RenderLayoutOptions
 } from "@glimmer/runtime";
 import { Simple, Option } from "@glimmer/interfaces";
+import Environment from './environment';
+import { UpdatableReference } from "@glimmer/object-reference";
+import DynamicScope from './dynamic-scope';
 
 export type Cursor = { element: Simple.Element, nextSibling: Option<Simple.Node> };
 
-export default abstract class Renderer {
+export class AbstractRenderer {
+  static create(env: Environment) {
+    return new this(env);
+  }
+
+  constructor(protected env: Environment) {}
+}
+
+export default abstract class Renderer extends AbstractRenderer {
   private renderResult: RenderResult;
 
   abstract layoutBuilder(cursor: Cursor): ElementBuilder;
-  protected env: Environment;
-  abstract mainLayout(context: Object): TemplateIterator;
+  abstract mainLayout(options: RenderLayoutOptions): TemplateIterator;
+
+  private layoutOptions(context: Object, cursor: Cursor) {
+    let builder = this.layoutBuilder(cursor);
+    let self = new UpdatableReference(context);
+    let dynamicScope = new DynamicScope();
+    return { builder, self, dynamicScope, env: this.env };
+  }
 
   /** @hidden
    *
@@ -36,10 +53,10 @@ export default abstract class Renderer {
   }
 
   /** @hidden */
-  render(context: Object): void {
+  render(context: Object, cursor: Cursor): void {
     let { env } = this;
-
-    let templateIterator = this.mainLayout(context);
+    let options = this.layoutOptions(context, cursor);
+    let templateIterator = this.mainLayout(options);
     // Begin a new transaction. The transaction stores things like component
     // lifecycle events so they can be flushed once rendering has completed.
     env.begin();

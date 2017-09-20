@@ -1,0 +1,19 @@
+{
+  "name": "@glimmer/ssr",
+  "version": "0.6.0",
+  "description": "Server-side rendering for glimmer applicationss",
+  "repository": "https://github.com/glimmerjs/glimmer.js",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/commonjs/es5/index.js",
+  "module": "dist/modules/es2017/index.js",
+  "types": "dist/types/index.d.ts",
+  "dependencies": {
+    "@glimmer/node": "^0.29.0",
+    "@glimmer/application": "^0.7.2",
+    "@glimmer/runtime": "^0.29.0",
+    "simple-dom": "^1.1.1"
+  }
+}

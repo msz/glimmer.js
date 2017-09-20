@@ -61,7 +61,6 @@ export default class Application implements Owner {
     this.rootName = options.rootName;
     this.resolver = options.resolver;
     this.document = options.document || window.document;
-    this.renderer = new ClientRenderer(this.env);
   }
 
   /**
@@ -79,6 +78,14 @@ export default class Application implements Owner {
     this.scheduleRerender();
   }
 
+  renderComponentSSR(componentName: string, _context?: Object) {
+    let cursor = {
+      element: (this.document as Document).body,
+      nextSibling: null
+    };
+    this.renderer.render({ componentName }, cursor);
+  }
+
   /**
    * Initializes the application and renders any components that have been
    * registered via `renderComponent()`.
@@ -87,8 +94,15 @@ export default class Application implements Owner {
     this.initialize();
 
     this.env = this.lookup(`environment:/${this.rootName}/main/main`);
+    this.renderer = this.lookup(`renderer:/${this.rootName}/main/main`);
 
-    this.renderer.render({ roots: this._roots });
+    let cursor = {
+      element: (this.document as Document).body,
+      nextSibling: null
+    };
+
+    this.renderer.render({ roots: this._roots }, cursor);
+
     this._didRender();
   }
 
@@ -139,11 +153,13 @@ export default class Application implements Owner {
     let appRegistry = new ApplicationRegistry(this._registry, this.resolver);
 
     registry.register(`environment:/${this.rootName}/main/main`, Environment);
+    registry.register(`renderer:/${this.rootName}/main/main`, ClientRenderer);
     registry.registerOption('helper', 'instantiate', false);
     registry.registerOption('template', 'instantiate', false);
     registry.register(`document:/${this.rootName}/main/main`, this.document as any);
     registry.registerOption('document', 'instantiate', false);
     registry.registerInjection('environment', 'document', `document:/${this.rootName}/main/main`);
+    registry.registerInjection('renderer', 'environment', `environment:/${this.rootName}/main/main`);
     registry.registerInjection('component-manager', 'env', `environment:/${this.rootName}/main/main`);
 
     let initializers = this._initializers;
