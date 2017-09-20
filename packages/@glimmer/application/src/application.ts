@@ -8,28 +8,15 @@ import {
   setOwner,
 } from '@glimmer/di';
 import {
-  templateFactory,
-  Template,
-  TemplateIterator,
-  RenderResult,
-  clientBuilder
-} from '@glimmer/runtime';
-import {
-  UpdatableReference
-} from '@glimmer/object-reference';
-import {
   Option
 } from '@glimmer/util';
 import {
   Simple
 } from '@glimmer/interfaces';
-import {
-  Specifier
-} from '@glimmer/opcode-compiler';
 import ApplicationRegistry from './application-registry';
-import DynamicScope from './dynamic-scope';
 import Environment from './environment';
-import mainTemplate from './templates/main';
+import Renderer from './renderer';
+import { ClientRenderer } from './renderers/client-renderer';
 
 export interface ApplicationOptions {
   rootName: string;
@@ -68,12 +55,13 @@ export default class Application implements Owner {
   private _rendering = false;
   private _rendered = false;
   private _scheduled = false;
-  private _result: RenderResult;
+  private renderer: Renderer;
 
   constructor(options: ApplicationOptions) {
     this.rootName = options.rootName;
     this.resolver = options.resolver;
     this.document = options.document || window.document;
+    this.renderer = new ClientRenderer(this.env);
   }
 
   /**
@@ -100,7 +88,8 @@ export default class Application implements Owner {
 
     this.env = this.lookup(`environment:/${this.rootName}/main/main`);
 
-    this._render();
+    this.renderer.render({ roots: this._roots });
+    this._didRender();
   }
 
   /**
@@ -118,7 +107,8 @@ export default class Application implements Owner {
     this._scheduled = true;
     requestAnimationFrame(() => {
       this._scheduled = false;
-      this._rerender();
+      this.renderer.rerender();
+      this._didRender();
       this._rendering = false;
     });
   }
@@ -180,90 +170,6 @@ export default class Application implements Owner {
       setOwner(hash, this);
       return hash;
     };
-  }
-
-  /**
-   * @hidden
-   *
-   * The compiled `main` root layout template.
-   */
-  protected get mainLayout(): Template<Specifier> {
-    return templateFactory(mainTemplate).create(this.env.compileOptions);
-  }
-
-  /**
-   * @hidden
-   *
-   * Configures and returns a template iterator for the root template, appropriate
-   * for performing the initial render of the Glimmer application.
-   */
-  protected get templateIterator(): TemplateIterator {
-    let { env, mainLayout } = this;
-
-    // Create the template context for the root `main` template, which just
-    // contains the array of component roots. Any property references in that
-    // template will be looked up from this object.
-    let self = new UpdatableReference({ roots: this._roots });
-
-    // Create an empty root scope.
-    let dynamicScope = new DynamicScope();
-
-    // The cursor tells the template which element to render into.
-    let cursor = {
-      element: (this.document as Document).body,
-      nextSibling: null
-    };
-
-    return mainLayout.renderLayout({
-      env,
-      self,
-      dynamicScope,
-      builder: clientBuilder(env, cursor)
-    });
-  }
-
-  /** @hidden
-   *
-   * Ensures the DOM is up-to-date by performing a revalidation on the root
-   * template's render result. This method should not be called directly;
-   * instead, any mutations in the program that could cause side-effects should
-   * call `scheduleRerender()`, which ensures that DOM updates only happen once
-   * at the end of the browser's event loop.
-   */
-  protected _rerender() {
-    let { env, _result: result } = this;
-
-    if (!result) {
-      throw new Error('Cannot re-render before initial render has completed');
-    }
-
-    env.begin();
-    result.rerender();
-    env.commit();
-
-    this._didRender();
-  }
-
-  /** @hidden */
-  protected _render(): void {
-    let { env, templateIterator } = this;
-
-    // Begin a new transaction. The transaction stores things like component
-    // lifecycle events so they can be flushed once rendering has completed.
-    env.begin();
-
-    // Iterate the template iterator, executing the compiled template program
-    // until there are no more instructions left to execute.
-    let result;
-    do {
-      result = templateIterator.next();
-    } while (!result.done);
-
-    // Finally, commit the transaction and flush component lifecycle hooks.
-    env.commit();
-
-    this._result = result.value;
-    this._didRender();
   }
 
   _didRender(): void {
