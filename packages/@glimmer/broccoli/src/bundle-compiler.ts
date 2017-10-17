@@ -1,9 +1,11 @@
-import { BundleCompiler } from '@glimmer/bundle-compiler';
+import { BundleCompiler, BundleCompilerOptions } from '@glimmer/bundle-compiler';
 import { ModuleUnificationCompilerDelegate } from '@glimmer/compiler-delegates';
+/* tslint:disable */
 export const BroccoliPlugin: BroccoliPlugin.Static = require("broccoli-plugin");
+/* tslint:enable */
 import walkSync from 'walk-sync';
 import FSTree from 'fs-tree-diff';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 export namespace BroccoliPlugin {
@@ -24,12 +26,18 @@ export namespace BroccoliPlugin {
   }
 }
 
-export interface BundleCompilerOptions {
+export interface OutputFiles {
+  dataSegment: string;
+  programFile: string;
+}
 
+export interface GlimmerBundleCompilerOptions {
+  bundleCompiler: BundleCompilerOptions;
+  outputFiles: OutputFiles;
 }
 
 export default class GlimmerBundleCompiler extends BroccoliPlugin {
-  options: Object;
+  options: GlimmerBundleCompilerOptions;
   compiler: BundleCompiler;
   private delegate: ModuleUnificationCompilerDelegate;
   private lastTree: Array<Object>;
@@ -37,12 +45,8 @@ export default class GlimmerBundleCompiler extends BroccoliPlugin {
     super([inputNode], { persistentOutput: true }); // TODO: enable persistent output
     this.options = options;
     let delegate = this.delegate = new ModuleUnificationCompilerDelegate(options.projectPath);
-    this.compiler = new BundleCompiler(delegate);
+    this.compiler = new BundleCompiler(delegate, options.bundleCompiler = {});
     this.lastTree = FSTree.fromEntries([]);
-  }
-
-  defaultOptions() {
-
   }
 
   listEntries() {
@@ -56,6 +60,7 @@ export default class GlimmerBundleCompiler extends BroccoliPlugin {
 
   build() {
     let [ srcPath ] = this.inputPaths;
+
     this.listEntries().forEach(entries => {
       let { relativePath } = entries;
       let content = this._readFile(relativePath);
@@ -69,9 +74,9 @@ export default class GlimmerBundleCompiler extends BroccoliPlugin {
     let { compiledBlocks } = this.compiler;
     let dataSegment = this.delegate.generateDataSegment(map, pool, heap.table, compiledBlocks);
 
+    let { outputFiles } = this.options;
+
+    writeFileSync(outputFiles.dataSegment, dataSegment);
+    writeFileSync(outputFiles.programFile, heap.buffer);
   }
 }
-
-/*
-  this.delgate
-*/
