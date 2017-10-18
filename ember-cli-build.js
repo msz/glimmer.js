@@ -17,15 +17,21 @@ const PRODUCTION = process.env.EMBER_ENV === 'production';
  * formats.
  */
 module.exports = function(_options) {
-  // First, get all of our TypeScript packages while preserving their relative
+  // Get all of our TypeScript packages while preserving their relative
   // path in the filesystem. This is important because tsconfig.json paths are
   // relative to the project root and we want to use the tsconfig as-is.
   let tsTree = funnel('packages/', {
-    destDir: 'packages/',
     exclude: ['**/node_modules/**']
   });
 
-  // Second, compile all of the TypeScript into ES2017 JavaScript. Because the
+  // Pass all the TS files to the glimmer template compiler.
+  // It will sync forward all of the files plus the transformed
+  // templates.
+  tsTree = new GlimmerTemplatePrecompiler(tsTree, {
+    rootName: '-application'
+  });
+
+  // Compile all of the TypeScript into ES2017 JavaScript. Because the
   // TypeScript compiler understands the project as a whole, it's faster to do
   // this once and use the transpiled JavaScript as the input to any further
   // transformations.
@@ -35,7 +41,7 @@ module.exports = function(_options) {
   // merge them back into our JavaScript output.
   jsTree = mergeDefinitionFiles(tsTree, jsTree);
 
-  // Third, gather any Handlebars templates and compile them.
+  // Gather any Handlebars templates and compile them.
   let templates = funnel(tsTree, {
     srcDir: 'packages/',
     include: ['**/*.hbs']
@@ -52,11 +58,9 @@ module.exports = function(_options) {
 
   if (PRODUCTION) {
     matrix = [
-      ['amd', 'es5'],
       ['commonjs', 'es2017'],
       ['commonjs', 'es5'],
       ['modules', 'es2017'],
-      ['modules', 'es5'],
       ['types']
     ];
   } else {

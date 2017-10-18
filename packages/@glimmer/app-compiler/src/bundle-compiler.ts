@@ -1,10 +1,9 @@
 import { BundleCompiler, BundleCompilerOptions } from '@glimmer/bundle-compiler';
-import { ModuleUnificationCompilerDelegate } from '@glimmer/compiler-delegates';
+import { ModuleUnificationCompilerDelegate, BundleCompilerDelegate } from '@glimmer/compiler-delegates';
 /* tslint:disable */
 export const BroccoliPlugin: BroccoliPlugin.Static = require("broccoli-plugin");
 /* tslint:enable */
 import walkSync from 'walk-sync';
-import FSTree from 'fs-tree-diff';
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
@@ -31,22 +30,35 @@ export interface OutputFiles {
   programFile: string;
 }
 
+export type CompilerMode = 'module-unification' | 'basic';
+
 export interface GlimmerBundleCompilerOptions {
   bundleCompiler: BundleCompilerOptions;
   outputFiles: OutputFiles;
+  delegate?: BundleCompilerDelegate;
+  mode?: CompilerMode;
 }
 
 export default class GlimmerBundleCompiler extends BroccoliPlugin {
   options: GlimmerBundleCompilerOptions;
   compiler: BundleCompiler;
   private delegate: ModuleUnificationCompilerDelegate;
-  private lastTree: Array<Object>;
   constructor(inputNode, options) {
     super([inputNode], { persistentOutput: true }); // TODO: enable persistent output
     this.options = options;
-    let delegate = this.delegate = new ModuleUnificationCompilerDelegate(options.projectPath);
+
+    if (!options.mode && !options.delegate) {
+      throw new Error('Must pass a bundle compiler mode or pass a custom compiler delegate.');
+    }
+
+    let delegate;
+    if (options.mode && options.mode === 'module-unification') {
+      delegate = this.delegate = new ModuleUnificationCompilerDelegate(options.projectPath);
+    } else if (options.delegate) {
+      delegate = this.delegate = new options.delegate(options.projectPath);
+    }
+
     this.compiler = new BundleCompiler(delegate, options.bundleCompiler = {});
-    this.lastTree = FSTree.fromEntries([]);
   }
 
   listEntries() {

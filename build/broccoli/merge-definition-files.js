@@ -11,5 +11,5 @@ module.exports = function(tsTree, jsTree) {
     include: ['**/*.d.ts']
   });
 
-  return merge([jsTree, definitionsTree]);
+  return merge([jsTree, definitionsTree], { overwrite: true });
 }

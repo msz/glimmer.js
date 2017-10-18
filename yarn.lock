@@ -1745,7 +1745,7 @@ broccoli-string-replace@^0.1.1:
     broccoli-persistent-filter "^1.1.5"
     minimatch "^3.0.3"
 
-broccoli-test-helper@^1.1.0:
+broccoli-test-helper@^1.1.0, broccoli-test-helper@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/broccoli-test-helper/-/broccoli-test-helper-1.2.0.tgz#d01005d8611fd73ebe1b29552bf052ff59badfb4"
   dependencies:
