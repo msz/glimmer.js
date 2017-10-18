@@ -90,7 +90,7 @@ export default class ModuleUnificationCompilerDelegate implements BundleCompiler
     return CompilableTemplate.topLevel(block, options);
   }
 
-  generateDataSegment(map: SpecifierMap, pool: ConstantPool, table: number[], compiledBlocks: Map<Specifier, AddedTemplate>) {
+  generateDataSegment(map: SpecifierMap, pool: ConstantPool, table: number[], nextFreeHandle: number, compiledBlocks: Map<Specifier, AddedTemplate>) {
     debug('generating data segment');
 
     let externalModuleTable = this.generateExternalModuleTable(map);
@@ -100,12 +100,13 @@ export default class ModuleUnificationCompilerDelegate implements BundleCompiler
     let symbolTables = this.generateSymbolTables();
 
     let source = `
+const nextFreeHandle = ${nextFreeHandle}
 ${externalModuleTable}
 ${heapTable}
 ${constantPool}
 ${specifierMap}
 ${symbolTables}
-export default { moduleTable, heapTable, pool, specifierMap, symbolTables };`;
+export default { moduleTable, heapTable, pool, specifierMap, symbolTables, nextFreeHandle };`;
     debug('generated data segment; source=%s', source);
 
     return source;

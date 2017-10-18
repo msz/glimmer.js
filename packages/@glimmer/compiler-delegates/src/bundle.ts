@@ -11,5 +11,5 @@ export type AddedTemplate = SerializedTemplateBlock | ICompilableTemplate<Progra
 export interface BundleCompilerDelegate extends CompilerDelegate {
   normalizePath(absolutePath: string): string;
   specifierFor(relativePath: string): Specifier;
-  generateDataSegment(map: SpecifierMap, pool: ConstantPool, heapTable: number[], blocks: Map<Specifier, AddedTemplate>): string;
+  generateDataSegment(map: SpecifierMap, pool: ConstantPool, heapTable: number[], nextFreeHandle: number, blocks: Map<Specifier, AddedTemplate>): string;
 }

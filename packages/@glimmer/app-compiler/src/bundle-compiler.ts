@@ -84,7 +84,7 @@ export default class GlimmerBundleCompiler extends BroccoliPlugin {
     let { heap, pool } = this.compiler.compile();
     let map = this.compiler.getSpecifierMap();
     let { compiledBlocks } = this.compiler;
-    let dataSegment = this.delegate.generateDataSegment(map, pool, heap.table, compiledBlocks);
+    let dataSegment = this.delegate.generateDataSegment(map, pool, heap.table, heap.handle, compiledBlocks);
 
     let { outputFiles } = this.options;
 

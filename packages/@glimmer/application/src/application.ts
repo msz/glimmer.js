@@ -61,7 +61,7 @@ export default class Application implements Owner {
   public document: Simple.Document;
   public env: Environment;
 
-  private _roots: AppRoot[] = [];
+  protected _roots: AppRoot[] = [];
   private _rootsIndex = 0;
   private _registry: Registry;
   private _container: Container;
