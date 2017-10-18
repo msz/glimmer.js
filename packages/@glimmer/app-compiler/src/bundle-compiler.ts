@@ -5,7 +5,8 @@ export const BroccoliPlugin: BroccoliPlugin.Static = require("broccoli-plugin");
 /* tslint:enable */
 import walkSync from 'walk-sync';
 import { readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { join, extname } from 'path';
+import { Option } from '@glimmer/interfaces';
 
 export namespace BroccoliPlugin {
   export interface PluginOptions {
@@ -26,51 +27,83 @@ export namespace BroccoliPlugin {
 }
 
 export interface OutputFiles {
-  dataSegment: string;
-  programFile: string;
+  dataSegment: Option<string>;
+  heapFile: Option<string>;
 }
 
 export type CompilerMode = 'module-unification' | 'basic';
 
+export interface BundleCompilerDelegateConstructor {
+  new(): BundleCompilerDelegate;
+}
+
 export interface GlimmerBundleCompilerOptions {
+  projectPath: string;
   bundleCompiler: BundleCompilerOptions;
-  outputFiles: OutputFiles;
-  delegate?: BundleCompilerDelegate;
+  outputFiles?: OutputFiles;
+  delegate?: BundleCompilerDelegateConstructor;
   mode?: CompilerMode;
 }
 
 export default class GlimmerBundleCompiler extends BroccoliPlugin {
   options: GlimmerBundleCompilerOptions;
   compiler: BundleCompiler;
-  private delegate: ModuleUnificationCompilerDelegate;
+  private delegate: BundleCompilerDelegate;
   constructor(inputNode, options) {
     super([inputNode], { persistentOutput: true }); // TODO: enable persistent output
-    this.options = options;
+    this.options = this.defaultOptions(options);
+  }
+
+  private defaultOptions(options: GlimmerBundleCompilerOptions) {
+    if (!options.projectPath) {
+      throw new Error('Must supply a projectPath');
+    }
 
     if (!options.mode && !options.delegate) {
       throw new Error('Must pass a bundle compiler mode or pass a custom compiler delegate.');
     }
 
-    let delegate;
-    if (options.mode && options.mode === 'module-unification') {
-      delegate = this.delegate = new ModuleUnificationCompilerDelegate(options.projectPath);
-    } else if (options.delegate) {
-      delegate = this.delegate = new options.delegate(options.projectPath);
+    if (!options.projectPath) {
+
     }
 
-    this.compiler = new BundleCompiler(delegate, options.bundleCompiler = {});
+    return Object.assign({
+      outputFiles: {
+        heapFile: 'templates.gbx',
+        dataSegment: 'data-segment.js'
+      }
+    }, options);
   }
 
   listEntries() {
     let [srcPath] = this.inputPaths;
-    return walkSync.entries(srcPath).filter(entry => !entry.isDirectory());
+    return walkSync.entries(srcPath).filter((entry) => {
+      return !entry.isDirectory() && extname(entry.relativePath) === '.hbs';
+    });
   }
 
   _readFile(file) {
     return readFileSync(join(this.inputPaths[0], file), 'UTF-8');
   }
 
+  createBundleCompiler() {
+    let delegate;
+    let { options } = this;
+    let [inputPath] = this.inputPaths;
+    if (options.mode && options.mode === 'module-unification') {
+      delegate = this.delegate = new ModuleUnificationCompilerDelegate(join(inputPath, options.projectPath));
+    } else if (options.delegate) {
+      delegate = this.delegate = new options.delegate();
+    }
+
+    this.compiler = new BundleCompiler(delegate, options.bundleCompiler = {});
+  }
+
   build() {
+    if (!this.compiler && !this.delegate) {
+      this.createBundleCompiler();
+    }
+
     let [ srcPath ] = this.inputPaths;
 
     this.listEntries().forEach(entries => {
@@ -88,7 +121,7 @@ export default class GlimmerBundleCompiler extends BroccoliPlugin {
 
     let { outputFiles } = this.options;
 
-    writeFileSync(outputFiles.dataSegment, dataSegment);
-    writeFileSync(outputFiles.programFile, heap.buffer);
+    writeFileSync(join(this.outputPath, outputFiles.dataSegment), dataSegment);
+    writeFileSync(join(this.outputPath, outputFiles.heapFile), new Buffer(heap.buffer));
   }
 }

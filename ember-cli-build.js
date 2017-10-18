@@ -21,12 +21,12 @@ module.exports = function(_options) {
   // path in the filesystem. This is important because tsconfig.json paths are
   // relative to the project root and we want to use the tsconfig as-is.
   let tsTree = funnel('packages/', {
+    destDir: 'packages/',
     exclude: ['**/node_modules/**']
   });
 
-  // Pass all the TS files to the glimmer template compiler.
-  // It will sync forward all of the files plus the transformed
-  // templates.
+  // Pass all the TypeScript files to the template compiler. It will pass
+  // forward all of the input files while the transforming templates.
   tsTree = new GlimmerTemplatePrecompiler(tsTree, {
     rootName: '-application'
   });
@@ -41,26 +41,15 @@ module.exports = function(_options) {
   // merge them back into our JavaScript output.
   jsTree = mergeDefinitionFiles(tsTree, jsTree);
 
-  // Gather any Handlebars templates and compile them.
-  let templates = funnel(tsTree, {
-    srcDir: 'packages/',
-    include: ['**/*.hbs']
-  });
-
-  let compiledTemplates = new GlimmerTemplatePrecompiler(templates, {
-    rootName: '-application'
-  });
-  compiledTemplates.targetExtension = 'js';
-
-  jsTree = merge([compiledTemplates, jsTree]);
-
   let matrix;
 
   if (PRODUCTION) {
     matrix = [
+      ['amd', 'es5'],
       ['commonjs', 'es2017'],
       ['commonjs', 'es5'],
       ['modules', 'es2017'],
+      ['modules', 'es5'],
       ['types']
     ];
   } else {

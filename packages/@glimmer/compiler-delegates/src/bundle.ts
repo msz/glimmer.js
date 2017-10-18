@@ -6,7 +6,7 @@ import { ProgramSymbolTable } from '@glimmer/interfaces';
 
 export type Metadata = {};
 
-export type AddedTemplate = SerializedTemplateBlock | ICompilableTemplate<ProgramSymbolTable>;
+export type AddedTemplate = SerializedTemplateBlock & ICompilableTemplate<ProgramSymbolTable>;
 
 export interface BundleCompilerDelegate extends CompilerDelegate {
   normalizePath(absolutePath: string): string;

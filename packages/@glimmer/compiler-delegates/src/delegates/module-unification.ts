@@ -1,7 +1,7 @@
 import { BundleCompilerDelegate, AddedTemplate } from '../bundle';
 import { getImportStatements } from '../utils/code-gen';
 import { Specifier, specifierFor, SpecifierMap } from '@glimmer/bundle-compiler';
-import { SymbolTable, ProgramSymbolTable } from '@glimmer/interfaces';
+import { ProgramSymbolTable } from '@glimmer/interfaces';
 import { expect, Dict } from '@glimmer/util';
 import { relative } from 'path';
 import { SerializedTemplateBlock } from '@glimmer/wire-format';
@@ -17,7 +17,6 @@ const BUILTINS = ['action', 'if'];
 
 export default class ModuleUnificationCompilerDelegate implements BundleCompilerDelegate {
   protected project: Project;
-  protected specifiersToSymbolTable: Map<Specifier, SymbolTable> = new Map();
 
   constructor(protected projectPath: string) {
     debug('initialized MU compiler delegate; project=%s', projectPath);
@@ -97,7 +96,7 @@ export default class ModuleUnificationCompilerDelegate implements BundleCompiler
     let constantPool = this.generateConstantPool(pool);
     let heapTable = this.generateHeapTable(table);
     let specifierMap = this.generateSpecifierMap(map);
-    let symbolTables = this.generateSymbolTables();
+    let symbolTables = this.generateSymbolTables(compiledBlocks);
 
     let source = `
 const nextFreeHandle = ${nextFreeHandle}
@@ -112,12 +111,18 @@ export default { moduleTable, heapTable, pool, specifierMap, symbolTables, nextF
     return source;
   }
 
-  generateSymbolTables() {
-    let symbolTables: Dict<SymbolTable> = {};
+  generateSymbolTables(compiledBlocks: Map<Specifier, AddedTemplate>) {
+    let symbolTables: Dict<ProgramSymbolTable> = {};
 
-    for (let [specifier, table] of this.specifiersToSymbolTable) {
+    for (let [specifier, template ] of compiledBlocks) {
       let muSpecifier = this.muSpecifierForSpecifier(specifier);
-      symbolTables[muSpecifier] = table;
+
+      symbolTables[muSpecifier] = {
+        hasEval: template.hasEval,
+        symbols: template.symbols,
+        referrer: null
+      };
+
     }
 
     return `const symbolTables = ${inlineJSON(symbolTables)};`;

@@ -53,4 +53,3 @@ function writeFileAsync(fileName, data) {
 module.exports = function buildTestIndex(inputTree, options) {
   return new TestIndexBuilder(inputTree, options);
 };
-

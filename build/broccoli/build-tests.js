@@ -34,9 +34,7 @@ function buildBrowserTests(tsTree, jsTree, packagesTree) {
     destDir: 'glimmer-node_modules'
   });
 
-  jsTree = funnel(merge([jsTree, packagesTree]), {
-    exclude: ['@glimmer/app-compiler/**/*.js']
-  });
+  jsTree = merge([jsTree, packagesTree]);
 
   // We include a number of assertions and logging information that can be
   // statically optimized in development builds and stripped entirely from
