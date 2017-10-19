@@ -118,8 +118,8 @@ export default { moduleTable, heapTable, pool, specifierMap, symbolTables, nextF
       let muSpecifier = this.muSpecifierForSpecifier(specifier);
 
       symbolTables[muSpecifier] = {
-        hasEval: template.hasEval,
-        symbols: template.symbols,
+        hasEval: (template as SerializedTemplateBlock).hasEval,
+        symbols: (template as SerializedTemplateBlock).symbols,
         referrer: null
       };
 

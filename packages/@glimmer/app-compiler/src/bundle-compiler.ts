@@ -69,8 +69,8 @@ export default class GlimmerBundleCompiler extends BroccoliPlugin {
 
     return Object.assign({
       outputFiles: {
-        heapFile: 'templates.gbx',
-        dataSegment: 'data-segment.js'
+        heapFile: 'src/templates.gbx',
+        dataSegment: 'src/data-segment.js'
       }
     }, options);
   }
@@ -108,7 +108,7 @@ export default class GlimmerBundleCompiler extends BroccoliPlugin {
     this.listEntries().forEach(entry => {
       let { relativePath } = entry;
       if (entry.isDirectory()) {
-        mkdirSync(relativePath);
+        mkdirSync(join(outputPath, relativePath));
       } else {
         let content = this._readFile(relativePath);
         if (extname(relativePath) === '.hbs') {
@@ -126,9 +126,9 @@ export default class GlimmerBundleCompiler extends BroccoliPlugin {
     let { compiledBlocks } = this.compiler;
     let dataSegment = this.delegate.generateDataSegment(map, pool, heap.table, heap.handle, compiledBlocks);
 
-    let { outputFiles } = this.options;
+    let { outputFiles, projectPath } = this.options;
 
-    writeFileSync(join(outputPath, outputFiles.dataSegment), dataSegment);
-    writeFileSync(join(outputPath, outputFiles.heapFile), new Buffer(heap.buffer));
+    writeFileSync(join(join(outputPath, projectPath), outputFiles.dataSegment), dataSegment);
+    writeFileSync(join(join(outputPath, projectPath), outputFiles.heapFile), new Buffer(heap.buffer));
   }
 }
