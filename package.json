@@ -11,6 +11,11 @@
     "test:node": "bin/run-node-tests.js",
     "problems": "tsc -p tsconfig.json --noEmit"
   },
+  "ember-addon": {
+    "paths": [
+      "build/symlink-dependencies"
+    ]
+  },
   "workspaces": [
     "packages/@glimmer/*"
   ],

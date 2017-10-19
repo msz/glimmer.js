@@ -1,30 +1,10 @@
 import { BundleCompiler, BundleCompilerOptions } from '@glimmer/bundle-compiler';
 import { ModuleUnificationCompilerDelegate, BundleCompilerDelegate } from '@glimmer/compiler-delegates';
-/* tslint:disable */
-export const BroccoliPlugin: BroccoliPlugin.Static = require("broccoli-plugin");
-/* tslint:enable */
+import Plugin from 'broccoli-plugin';
 import walkSync from 'walk-sync';
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, extname } from 'path';
 import { Option } from '@glimmer/interfaces';
-
-export namespace BroccoliPlugin {
-  export interface PluginOptions {
-    name?: string;
-    annotation?: string;
-    persistentOutput?: boolean;
-  }
-
-  export interface Plugin {
-    inputPaths: string[];
-    outputPath: string;
-    cachePath: string;
-  }
-
-  export interface Static {
-    new (inputNodes: any[], options?: any): Plugin;
-  }
-}
 
 export interface OutputFiles {
   dataSegment: Option<string>;
@@ -45,8 +25,10 @@ export interface GlimmerBundleCompilerOptions {
   mode?: CompilerMode;
 }
 
-export default class GlimmerBundleCompiler extends BroccoliPlugin {
+export default class GlimmerBundleCompiler extends Plugin {
   options: GlimmerBundleCompilerOptions;
+  inputPaths: string[];
+  outputPath: string;
   compiler: BundleCompiler;
   private delegate: BundleCompilerDelegate;
   constructor(inputNode, options) {
@@ -83,9 +65,8 @@ export default class GlimmerBundleCompiler extends BroccoliPlugin {
   createBundleCompiler() {
     let delegate;
     let { options } = this;
-    let [inputPath] = this.inputPaths;
     if (options.mode && options.mode === 'module-unification') {
-      delegate = this.delegate = new ModuleUnificationCompilerDelegate(join(inputPath, options.projectPath));
+      delegate = this.delegate = new ModuleUnificationCompilerDelegate(options.projectPath);
     } else if (options.delegate) {
       delegate = this.delegate = new options.delegate();
     }
@@ -122,9 +103,9 @@ export default class GlimmerBundleCompiler extends BroccoliPlugin {
     let { compiledBlocks } = this.compiler;
     let dataSegment = this.delegate.generateDataSegment(map, pool, heap.table, heap.handle, compiledBlocks);
 
-    let { outputFiles, projectPath } = this.options;
+    let { outputFiles } = this.options;
 
-    writeFileSync(join(join(outputPath, projectPath), outputFiles.dataSegment), dataSegment);
-    writeFileSync(join(join(outputPath, projectPath), outputFiles.heapFile), new Buffer(heap.buffer));
+    writeFileSync(join(outputPath, outputFiles.dataSegment), dataSegment);
+    writeFileSync(join(outputPath, outputFiles.heapFile), new Buffer(heap.buffer));
   }
 }
