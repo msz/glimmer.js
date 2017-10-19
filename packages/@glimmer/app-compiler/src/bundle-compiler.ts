@@ -4,7 +4,7 @@ import { ModuleUnificationCompilerDelegate, BundleCompilerDelegate } from '@glim
 export const BroccoliPlugin: BroccoliPlugin.Static = require("broccoli-plugin");
 /* tslint:enable */
 import walkSync from 'walk-sync';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, extname } from 'path';
 import { Option } from '@glimmer/interfaces';
 
@@ -77,9 +77,7 @@ export default class GlimmerBundleCompiler extends BroccoliPlugin {
 
   listEntries() {
     let [srcPath] = this.inputPaths;
-    return walkSync.entries(srcPath).filter((entry) => {
-      return !entry.isDirectory() && extname(entry.relativePath) === '.hbs';
-    });
+    return walkSync.entries(srcPath);
   }
 
   _readFile(file) {
@@ -105,13 +103,22 @@ export default class GlimmerBundleCompiler extends BroccoliPlugin {
     }
 
     let [ srcPath ] = this.inputPaths;
+    let { outputPath } = this;
 
-    this.listEntries().forEach(entries => {
-      let { relativePath } = entries;
-      let content = this._readFile(relativePath);
-      let normalizedPath = this.delegate.normalizePath(join(srcPath, relativePath));
-      let specifier = this.delegate.specifierFor(normalizedPath);
-      this.compiler.add(specifier, content);
+    this.listEntries().forEach(entry => {
+      let { relativePath } = entry;
+      if (entry.isDirectory()) {
+        mkdirSync(relativePath);
+      } else {
+        let content = this._readFile(relativePath);
+        if (extname(relativePath) === '.hbs') {
+          let normalizedPath = this.delegate.normalizePath(join(srcPath, relativePath));
+          let specifier = this.delegate.specifierFor(normalizedPath);
+          this.compiler.add(specifier, content);
+        } else {
+          writeFileSync(join(outputPath, relativePath), content);
+        }
+      }
     });
 
     let { heap, pool } = this.compiler.compile();
@@ -121,7 +128,7 @@ export default class GlimmerBundleCompiler extends BroccoliPlugin {
 
     let { outputFiles } = this.options;
 
-    writeFileSync(join(this.outputPath, outputFiles.dataSegment), dataSegment);
-    writeFileSync(join(this.outputPath, outputFiles.heapFile), new Buffer(heap.buffer));
+    writeFileSync(join(outputPath, outputFiles.dataSegment), dataSegment);
+    writeFileSync(join(outputPath, outputFiles.heapFile), new Buffer(heap.buffer));
   }
 }

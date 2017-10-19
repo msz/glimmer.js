@@ -66,5 +66,3 @@ module('Broccol Glimmer Bundle Compiler', function(hooks) {
     assert.ok(files['data-segment.js']);
   }));
 });
-
-
