@@ -72,7 +72,7 @@ module('Broccol Glimmer Bundle Compiler', function(hooks) {
     assert.deepEqual(Object.keys(files['my-app'].src.ui), ['components']);
 
     Object.keys(files['my-app'].src.ui.components).forEach((component) => {
-      assert.deepEqual(Object.keys(files['my-app'].src.ui.components[component]), ['component.ts'])
+      assert.deepEqual(Object.keys(files['my-app'].src.ui.components[component]), ['component.ts']);
     });
   }));
 

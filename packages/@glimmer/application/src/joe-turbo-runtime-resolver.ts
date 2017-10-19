@@ -5,7 +5,6 @@ import { expect, unwrap } from '@glimmer/util';
 import { Owner } from '@glimmer/di';
 import Component from '@glimmer/component';
 
-
 export default class JoeTurboRuntimeResolver implements IRuntimeResolver<Specifier> {
   constructor(
     private specifierMap: Dict<number>,
@@ -48,7 +47,6 @@ export default class JoeTurboRuntimeResolver implements IRuntimeResolver<Specifi
     if (!this.cache.component.hasName(name)) {
       let specifier = unwrap(this.identifyComponent(name, meta));
 
-
       let componentSpecifier = this.owner.identify('component', specifier);
       let componentFactory: ComponentFactory = null;
 
@@ -62,14 +60,13 @@ export default class JoeTurboRuntimeResolver implements IRuntimeResolver<Specifi
         };
       }
 
-      handle = this.specifierMap[specifier]
+      handle = this.specifierMap[specifier];
     } else {
       handle = this.lookup('component', name, meta);
     }
 
     return this.resolve<ComponentDefinition>(handle);
   }
-
 
   lookupPartial(name: string, meta: Specifier): number {
     throw new Error("Method not implemented.");
