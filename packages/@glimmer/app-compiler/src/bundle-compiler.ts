@@ -1,17 +1,11 @@
 import { BundleCompiler, BundleCompilerOptions, specifierFor } from '@glimmer/bundle-compiler';
-import { ModuleUnificationCompilerDelegate, BundleCompilerDelegate } from '@glimmer/compiler-delegates';
+import { ModuleUnificationCompilerDelegate, BundleCompilerDelegate, OutputFiles } from '@glimmer/compiler-delegates';
 import Plugin from 'broccoli-plugin';
 import walkSync from 'walk-sync';
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, extname } from 'path';
-import { Option } from '@glimmer/interfaces';
 import { mainLayout } from '@glimmer/application';
 import { CompilableTemplate } from '@glimmer/opcode-compiler';
-
-export interface OutputFiles {
-  dataSegment: Option<string>;
-  heapFile: Option<string>;
-}
 
 export type CompilerMode = 'module-unification' | 'basic';
 
@@ -68,7 +62,7 @@ export default class GlimmerBundleCompiler extends Plugin {
     let delegate;
     let { options } = this;
     if (options.mode && options.mode === 'module-unification') {
-      delegate = this.delegate = new ModuleUnificationCompilerDelegate(options.projectPath);
+      delegate = this.delegate = new ModuleUnificationCompilerDelegate(options.projectPath, options.outputFiles);
     } else if (options.delegate) {
       delegate = this.delegate = new options.delegate();
     }

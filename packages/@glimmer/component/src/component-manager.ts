@@ -34,17 +34,20 @@ export class ComponentStateBucket {
 
   constructor(definition: DefinitionState, args: CapturedArguments, owner: Owner) {
     let componentFactory = definition.ComponentClass;
-    let name = definition.name;
-
     this.args = args;
 
-    let injections = {
-      debugName: name,
-      args: this.namedArgsSnapshot()
-    };
+    if (componentFactory) {
+      let name = definition.name;
 
-    setOwner(injections, owner);
-    this.component = componentFactory.create(injections);
+
+          let injections = {
+            debugName: name,
+            args: this.namedArgsSnapshot()
+          };
+
+          setOwner(injections, owner);
+          this.component = componentFactory.create(injections);
+    }
   }
 
   get tag(): Tag {
@@ -95,11 +98,13 @@ export default class ComponentManager implements IComponentManager<ComponentStat
   didCreateElement(bucket: ComponentStateBucket, element: HTMLElement) { }
 
   didRenderLayout(bucket: ComponentStateBucket, bounds: VMBounds) {
-    bucket.component.bounds = new Bounds(bounds);
+    if (bucket.component) {
+      bucket.component.bounds = new Bounds(bounds);
+    }
   }
 
   didCreate(bucket: ComponentStateBucket) {
-    if (bucket) { bucket.component.didInsertElement(); }
+    if (bucket && bucket.component) { bucket.component.didInsertElement(); }
   }
 
   getTag({ tag }: ComponentStateBucket): Tag {

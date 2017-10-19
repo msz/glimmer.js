@@ -4,6 +4,7 @@ import { RuntimeProgram, RuntimeConstants, ConstantPool, Heap } from '@glimmer/p
 import { SymbolTable, Dict, VMHandle } from '@glimmer/interfaces';
 import DynamicScope from './dynamic-scope';
 import { UpdatableReference } from '@glimmer/object-reference';
+import JoeTurboRuntimeResolver from './joe-turbo-runtime-resolver';
 
 export interface DataSegment {
   moduleTable: Function[];
@@ -12,6 +13,25 @@ export interface DataSegment {
   specifierMap: Dict<VMHandle>;
   symbolTables: Dict<SymbolTable>;
   nextFreeHandle: number;
+}
+
+interface CompiledApplicationOptions {
+  bytecode: Promise<ArrayBuffer> | ArrayBuffer;
+  metadata: DataSegment;
+}
+
+interface UncompiledApplicationOptions {
+  compiler: RuntimeCompiler;
+}
+
+interface RuntimeCompiler extends CompileResolver, RuntimeResolver {
+  resolver: Resolver;
+}
+
+class Application {
+  constructor(options: CompiledApplicationOptions | UncompiledApplicationOptions) {
+
+  }
 }
 
 export interface JoeTurboOptions extends ApplicationOptions {
@@ -67,18 +87,16 @@ export default class JoeTurboApplication extends Application {
       nextSibling: null
     };
 
-    debugger;
-
-    let { pool, heapTable, nextFreeHandle, specifierMap, symbolTables } = this.dataSegment;
+    let { pool, heapTable, nextFreeHandle, specifierMap, symbolTables, moduleTable } = this.dataSegment;
     let { programBuffer } = this;
     let runtimeHeap = new Heap({
       buffer: programBuffer,
       table: heapTable,
       handle: nextFreeHandle
     });
-    let resolver;
+    let resolver = new JoeTurboRuntimeResolver(specifierMap, symbolTables, moduleTable, this);
     let runtimeProgram = new RuntimeProgram(new RuntimeConstants(resolver, pool), runtimeHeap);
-    let handle = specifierMap['ui/components/main'];
+    let handle = specifierMap['__BUILTIN__'];
     let vm = LowLevelVM.initial(runtimeProgram, env, self, null, dynamicScope, clientBuilder(env, cursor), handle);
 
     return new TemplateIterator(vm);

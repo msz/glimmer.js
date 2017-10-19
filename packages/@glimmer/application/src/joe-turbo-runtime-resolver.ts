@@ -1,14 +1,26 @@
 import { Specifier, LookupType } from './runtime-resolver';
-import { RuntimeResolver as IRuntimeResolver, Option, Dict, SymbolTable, Opaque, Maybe } from '@glimmer/interfaces';
+import { RuntimeResolver as IRuntimeResolver, Option, Dict, SymbolTable, Opaque, Maybe, ComponentCapabilities, ProgramSymbolTable } from '@glimmer/interfaces';
 import { ComponentDefinition, ComponentFactory } from '@glimmer/component';
 import { expect, unwrap } from '@glimmer/util';
 import { Owner } from '@glimmer/di';
 import Component from '@glimmer/component';
+import { TypedRegistry } from './typed-registry';
+import { Invocation } from '@glimmer/runtime';
+
+export const CAPABILITIES: ComponentCapabilities = {
+  dynamicLayout: false,
+  prepareArgs: false,
+  elementHook: true,
+  dynamicTag: true,
+  createArgs: true,
+  attributeHook: true
+};
+
 
 export default class JoeTurboRuntimeResolver implements IRuntimeResolver<Specifier> {
   constructor(
     private specifierMap: Dict<number>,
-    private symbolTables: Dict<SymbolTable>,
+    private symbolTables: Dict<ProgramSymbolTable>,
     private externalModuleTable: Opaque[],
     private owner: Owner
   ) {}
@@ -32,6 +44,11 @@ export default class JoeTurboRuntimeResolver implements IRuntimeResolver<Specifi
     }
 
     return specifier;
+  }
+
+  compileTemplate(name: string): Invocation {
+    let specifier = this.owner.identify(`template:${name}`);
+    return this.getInvocation({ specifier });
   }
 
   lookup(type: LookupType, name: string, referrer?: Specifier): Option<number> {
@@ -65,7 +82,11 @@ export default class JoeTurboRuntimeResolver implements IRuntimeResolver<Specifi
       handle = this.lookup('component', name, meta);
     }
 
-    return this.resolve<ComponentDefinition>(handle);
+    let ComponentClass = this.resolve<Component>(handle);
+    return {
+      state: { name, capabilities: CAPABILITIES, ComponentClass, layout: null },
+      manager: this.owner.lookup('component-manager:/my-app/component-managers/main')
+    };
   }
 
   lookupPartial(name: string, meta: Specifier): number {
@@ -74,8 +95,8 @@ export default class JoeTurboRuntimeResolver implements IRuntimeResolver<Specifi
 
   getInvocation(meta: Specifier) {
     let handle = this.specifierMap[meta.specifier];
-    let symbolTable = expect(this.symbolTables[handle], `Should have a handle for a symbol table`);
-    return symbolTable;
+    let symbolTable = expect(this.symbolTables[meta.specifier], `Should have a handle for a symbol table`);
+    return {symbolTable, handle};
   }
 
   resolve<U>(specifier: number): U {

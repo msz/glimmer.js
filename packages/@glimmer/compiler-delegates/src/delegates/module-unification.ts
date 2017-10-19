@@ -3,7 +3,7 @@ import { getImportStatements } from '../utils/code-gen';
 import { Specifier, specifierFor, SpecifierMap } from '@glimmer/bundle-compiler';
 import { ProgramSymbolTable } from '@glimmer/interfaces';
 import { expect, Dict } from '@glimmer/util';
-import { relative } from 'path';
+import { relative, dirname, extname } from 'path';
 import { SerializedTemplateBlock } from '@glimmer/wire-format';
 import { CompilableTemplate, CompileOptions, ICompilableTemplate } from '@glimmer/opcode-compiler';
 import { ConstantPool } from '@glimmer/program';
@@ -15,10 +15,17 @@ const debug = Debug('@glimmer/compiler-delegates:mu-delegate');
 
 const BUILTINS = ['action', 'if'];
 
+import { Option } from '@glimmer/interfaces';
+
+export interface OutputFiles {
+  dataSegment: Option<string>;
+  heapFile: Option<string>;
+}
+
 export default class ModuleUnificationCompilerDelegate implements BundleCompilerDelegate {
   protected project: Project;
 
-  constructor(protected projectPath: string) {
+  constructor(protected projectPath: string, public outputFiles: OutputFiles) {
     debug('initialized MU compiler delegate; project=%s', projectPath);
     this.project = new Project(projectPath);
   }
@@ -170,10 +177,11 @@ const pool = ${inlineJSON(pool)};
   generateExternalModuleTable(map: SpecifierMap) {
     let project = this.project;
     let self = this;
+    let dataSegmentPath = dirname(this.outputFiles.dataSegment);
 
     // First, convert the map into an array of specifiers, using the handle
     // as the index.
-    let modules = toSparseArray(map.byHandle)
+    let modules = toSparseArray(map.byVMHandle)
       .map(normalizeModulePaths)
       .filter(m => m) as Specifier[];
 
@@ -204,7 +212,10 @@ const pool = ${inlineJSON(pool)};
       let componentSpec = project.resolver.identify('component:', referrer);
       if (componentSpec) {
         let componentPath = project.pathForSpecifier(componentSpec)!;
-        debug('found corresponding component; referrer=%s; path=%s', referrer, componentPath);
+        componentPath = relative(dataSegmentPath, componentPath);
+        debug('found corresponding component; referrer=%s; path=%s; dataSegment=%s', referrer, componentPath, dataSegmentPath);
+        componentPath = componentPath.replace(extname(componentPath), '');
+
         return specifierFor(componentPath, 'default');
       }
 
