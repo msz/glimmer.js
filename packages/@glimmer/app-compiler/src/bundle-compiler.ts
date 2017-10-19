@@ -63,10 +63,6 @@ export default class GlimmerBundleCompiler extends BroccoliPlugin {
       throw new Error('Must pass a bundle compiler mode or pass a custom compiler delegate.');
     }
 
-    if (!options.projectPath) {
-
-    }
-
     return Object.assign({
       outputFiles: {
         heapFile: 'src/templates.gbx',
