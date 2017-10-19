@@ -67,6 +67,8 @@ export default class JoeTurboApplication extends Application {
       nextSibling: null
     };
 
+    debugger;
+
     let { pool, heapTable, nextFreeHandle, specifierMap, symbolTables } = this.dataSegment;
     let { programBuffer } = this;
     let runtimeHeap = new Heap({

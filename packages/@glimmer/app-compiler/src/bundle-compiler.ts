@@ -1,10 +1,12 @@
-import { BundleCompiler, BundleCompilerOptions } from '@glimmer/bundle-compiler';
+import { BundleCompiler, BundleCompilerOptions, specifierFor } from '@glimmer/bundle-compiler';
 import { ModuleUnificationCompilerDelegate, BundleCompilerDelegate } from '@glimmer/compiler-delegates';
 import Plugin from 'broccoli-plugin';
 import walkSync from 'walk-sync';
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, extname } from 'path';
 import { Option } from '@glimmer/interfaces';
+import { mainLayout } from '@glimmer/application';
+import { CompilableTemplate } from '@glimmer/opcode-compiler';
 
 export interface OutputFiles {
   dataSegment: Option<string>;
@@ -79,8 +81,12 @@ export default class GlimmerBundleCompiler extends Plugin {
       this.createBundleCompiler();
     }
 
-    let [ srcPath ] = this.inputPaths;
     let { outputPath } = this;
+
+    let specifier = specifierFor('__BUILTIN__', 'default');
+    let compilable = CompilableTemplate.topLevel(JSON.parse(mainLayout.block), this.compiler.compileOptions(specifier));
+
+    this.compiler.addCustom(specifier, compilable);
 
     this.listEntries().forEach(entry => {
       let { relativePath } = entry;
@@ -89,12 +95,12 @@ export default class GlimmerBundleCompiler extends Plugin {
       } else {
         let content = this._readFile(relativePath);
         if (extname(relativePath) === '.hbs') {
-          let normalizedPath = this.delegate.normalizePath(join(srcPath, relativePath));
+          let normalizedPath = this.delegate.normalizePath(relativePath);
           let specifier = this.delegate.specifierFor(normalizedPath);
           this.compiler.add(specifier, content);
-        } else {
-          writeFileSync(join(outputPath, relativePath), content);
         }
+        writeFileSync(join(outputPath, relativePath), content);
+
       }
     });
 

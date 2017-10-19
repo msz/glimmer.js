@@ -4,3 +4,5 @@ export { default as ApplicationRegistry } from './src/application-registry';
 export { RuntimeResolver } from './src/runtime-resolver';
 export { default as Iterable } from './src/iterable';
 export { debugInfoForReference } from './src/helpers/action';
+export { default as mainLayout } from './src/templates/main';
+export { default as JoeTurboApplication } from './src/joe-turbo-application';
