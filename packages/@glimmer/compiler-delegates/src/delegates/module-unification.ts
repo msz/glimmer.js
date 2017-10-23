@@ -9,7 +9,7 @@ import { CompilableTemplate, CompileOptions, ICompilableTemplate } from '@glimme
 import { ConstantPool } from '@glimmer/program';
 import Debug from 'debug';
 import { Project } from 'glimmer-analyzer';
-import { CAPABILITIES } from '../capabilities';
+import { CAPABILITIES } from '@glimmer/component';
 
 const debug = Debug('@glimmer/compiler-delegates:mu-delegate');
 

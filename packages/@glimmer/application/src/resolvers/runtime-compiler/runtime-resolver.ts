@@ -9,25 +9,15 @@ import {
 } from '@glimmer/runtime';
 import { TemplateOptions } from '@glimmer/opcode-compiler';
 import { expect } from "@glimmer/util";
-import { TypedRegistry } from "./typed-registry";
+import { TypedRegistry } from '../../utils/typed-registry';
 import { Opaque, RuntimeResolver as IRuntimeResolver, Option, Maybe, Dict } from "@glimmer/interfaces";
 import { Owner } from "@glimmer/di";
 import Component, { ComponentDefinition, ComponentManager, ComponentFactory } from "@glimmer/component";
-import Application from "./application";
-import { HelperReference } from './helpers/user-helper';
+import Application from "../../application";
+import { HelperReference } from '../../helpers/user-helper';
+import { LookupType, Lookup } from '../interfaces';
 
 export type UserHelper = (args: ReadonlyArray<Opaque>, named: Dict<Opaque>) => Opaque;
-
-export interface Lookup {
-  helper: GlimmerHelper;
-  modifier: ModifierManager;
-  component: ComponentDefinition;
-  template: SerializedTemplateWithLazyBlock<Specifier>;
-  manager: ComponentManager;
-  compiledTemplate: Invocation;
-}
-
-export type LookupType = keyof Lookup;
 
 export interface Specifier {
   specifier: string;

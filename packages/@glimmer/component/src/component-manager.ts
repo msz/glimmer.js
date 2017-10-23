@@ -39,14 +39,13 @@ export class ComponentStateBucket {
     if (componentFactory) {
       let name = definition.name;
 
+      let injections = {
+        debugName: name,
+        args: this.namedArgsSnapshot()
+      };
 
-          let injections = {
-            debugName: name,
-            args: this.namedArgsSnapshot()
-          };
-
-          setOwner(injections, owner);
-          this.component = componentFactory.create(injections);
+      setOwner(injections, owner);
+      this.component = componentFactory.create(injections);
     }
   }
 

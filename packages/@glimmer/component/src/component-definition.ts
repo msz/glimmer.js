@@ -2,15 +2,7 @@ import ComponentManager from "./component-manager";
 import { Option, ComponentCapabilities } from '@glimmer/interfaces';
 import { ComponentFactory } from './component';
 import { ComponentDefinition as IComponentDefinition } from '@glimmer/runtime';
-
-const capabilities: ComponentCapabilities = {
-  dynamicLayout: false,
-  dynamicTag: true,
-  prepareArgs: false,
-  createArgs: true,
-  attributeHook: true,
-  elementHook: true
-};
+import { CAPABILITIES } from './capabilities';
 
 export interface DefinitionState {
   /* Manager-related */
@@ -27,7 +19,7 @@ export default class ComponentDefinition implements IComponentDefinition {
   constructor(public name: string, public manager: ComponentManager, public ComponentClass: ComponentFactory, public layout: Option<number>) {
     this.state = {
       name,
-      capabilities,
+      capabilities: CAPABILITIES,
       ComponentClass,
       layout
     };

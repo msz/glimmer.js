@@ -2,6 +2,21 @@
 # yarn lockfile v1
 
 
+"@glimmer/application@0.8.0-alpha.10":
+  version "0.8.0-alpha.10"
+  resolved "https://registry.yarnpkg.com/@glimmer/application/-/application-0.8.0-alpha.10.tgz#829a84e6d3e52af9fb4faed30f73f3a8c5847013"
+  dependencies:
+    "@glimmer/compiler" "^0.29.8"
+    "@glimmer/di" "^0.1.9"
+    "@glimmer/env" "^0.1.7"
+    "@glimmer/interfaces" "^0.29.8"
+    "@glimmer/object-reference" "^0.29.8"
+    "@glimmer/opcode-compiler" "^0.29.8"
+    "@glimmer/reference" "^0.29.8"
+    "@glimmer/resolver" "^0.3.0"
+    "@glimmer/runtime" "^0.29.8"
+    "@glimmer/util" "^0.29.8"
+
 "@glimmer/build@^0.6.1", "@glimmer/build@^0.6.2":
   version "0.6.3"
   resolved "https://registry.yarnpkg.com/@glimmer/build/-/build-0.6.3.tgz#be259e08cb50da4f249a8e57e1cc7570029bd214"

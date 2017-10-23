@@ -19,7 +19,7 @@ import {
 import Iterable from './iterable';
 import { Program, LazyConstants } from '@glimmer/program';
 import action from './helpers/action';
-import { RuntimeResolver, Specifier } from "./runtime-resolver";
+import { Specifier, GlimmerResolver } from "./resolvers/interfaces";
 import {
   TemplateOptions,
   Macros,
@@ -39,7 +39,7 @@ export interface EnvironmentOptions {
 }
 
 class CompileTimeLookup implements ICompileTimeLookup<Specifier> {
-  constructor(private resolver: RuntimeResolver) {}
+  constructor(private resolver: GlimmerResolver) {}
 
   private getComponentDefinition(handle: number): ComponentDefinition {
     let spec = this.resolver.resolve<Option<ComponentDefinition>>(handle);
@@ -58,7 +58,7 @@ class CompileTimeLookup implements ICompileTimeLookup<Specifier> {
   getLayout(handle: number): ICompilableTemplate<ProgramSymbolTable> {
     let definition = this.getComponentDefinition(handle);
     let { manager } = definition;
-    let invocation = (manager as WithStaticLayout<any, any, Specifier, RuntimeResolver>).getLayout(definition, this.resolver);
+    let invocation = (manager as WithStaticLayout<any, any, Specifier, GlimmerResolver>).getLayout(definition, this.resolver);
 
     return {
       compile() { return invocation.handle; },
@@ -85,7 +85,7 @@ class CompileTimeLookup implements ICompileTimeLookup<Specifier> {
 
 export default class Environment extends GlimmerEnvironment {
   private uselessAnchor: HTMLAnchorElement;
-  public resolver: RuntimeResolver;
+  public resolver: GlimmerResolver;
   protected program: Program<Specifier>;
   public compileOptions: TemplateOptions<Specifier>;
 
