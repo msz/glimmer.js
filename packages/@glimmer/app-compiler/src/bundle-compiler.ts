@@ -7,7 +7,7 @@ import { join, extname } from 'path';
 import { mainLayout } from '@glimmer/application';
 import { CompilableTemplate } from '@glimmer/opcode-compiler';
 
-export type CompilerMode = 'module-unification' | 'basic';
+export type CompilerMode = 'module-unification';
 
 export interface BundleCompilerDelegateConstructor {
   new(): BundleCompilerDelegate;
