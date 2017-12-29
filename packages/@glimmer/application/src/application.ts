@@ -53,7 +53,7 @@ export interface ApplicationConstructor<T = Application> {
   new (options: ApplicationOptions): T;
 }
 
-export type Notifier = [() => void, (err) => void];
+export type Notifier = [() => void, (err: Error) => void];
 
 export default class Application implements Owner {
   public rootName: string;
